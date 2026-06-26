@@ -3,13 +3,13 @@
 
   // ── CONFIG ──────────────────────────────────────────────────────────────────
   var CFG = Object.assign({
-    n8nBase:        'https://n8n-jcg4epwgyztosnmbxghhwvdv.34.133.34.116.sslip.io',
+    n8nBase:        'https://n8n-jcg4epwgyztosnmbxghhwvdv.136.116.88.204.sslip.io',
     chatPath:       '/webhook/ecomangos-agent',
     leadsPath:      '/webhook/ecomangos-leads',
     primaryColor:   '#F5A21C',
     secondaryColor: '#2D6B27',
     welcomeMessage: 'Hola, soy el asistente de Glamping Eco Mangos. Puedo ayudarte con precios, opciones de glamping y reservas. Para empezar: ¿qué fecha tienes en mente para tu experiencia?',
-    timeoutMs:      45000,
+    timeoutMs:      60000,
     maxRetries:     2,
     sessionTtlMs:   30 * 60 * 1000,
     privacyUrl:     '/politica-privacidad.html',
@@ -60,7 +60,7 @@
     }).join('');
     // Restore images
     s = s.replace(/\x00IMG(\d+)\x00/g, function(_, i) {
-      return '<img src="' + imgs[+i] + '" alt="Eco Mangos" style="max-width:100%;border-radius:8px;margin:6px 0;display:block;">';
+      return '<img src="' + imgs[+i] + '" class="eco-photo" alt="Eco Mangos" style="max-width:100%;border-radius:8px;margin:6px 0;display:block;">';
     });
     return s;
   }
@@ -89,7 +89,8 @@
     '.eco-msg ul{margin:4px 0 4px 16px;padding:0}.eco-msg li{margin:2px 0}',
     '.eco-msg-user{align-self:flex-end;background:' + PRIMARY + ';color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px}',
     '.eco-msg-bot{align-self:flex-start;background:#f1f5f9;color:#1e293b;border-radius:16px 16px 16px 4px;padding:10px 14px}',
-    '.eco-msg-bot img{max-width:1.2em!important;max-height:1.2em!important;display:inline-block!important;vertical-align:text-bottom!important}',
+    '.eco-msg-bot img:not(.eco-photo){max-width:1.2em!important;max-height:1.2em!important;display:inline-block!important;vertical-align:text-bottom!important}',
+    '.eco-msg-bot img.eco-photo{max-width:100%;border-radius:8px;margin:6px 0;display:block}',
     '#eco-typing{display:none;align-self:flex-start;padding:10px 14px;background:#f1f5f9;border-radius:16px 16px 16px 4px}',
     '.eco-dot{width:7px;height:7px;background:#94a3b8;border-radius:50%;display:inline-block;animation:eco-bounce .9s infinite}',
     '.eco-dot:nth-child(2){animation-delay:.15s}.eco-dot:nth-child(3){animation-delay:.3s}',
@@ -325,7 +326,18 @@
           }
           hideTyping();
           isLoading = false;
-          addMessage('bot', 'Lo siento, hubo un problema de conexión. Por favor escríbenos directamente al <a href="' + CFG.whatsappUrl + '" target="_blank">WhatsApp 929 790 568</a>.');
+          var errDiv = addMessage('bot',
+            '<p style="margin:0 0 8px 0">Tarde un poco en responder. ¿Lo intentamos de nuevo?</p>' +
+            '<button class="eco-retry-btn" style="background:' + PRIMARY + ';color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:600;margin-right:8px">Reintentar</button>' +
+            '<a href="' + CFG.whatsappUrl + '" target="_blank" rel="noopener" style="font-size:12px;color:#64748b;text-decoration:none">O escribe al WhatsApp</a>'
+          );
+          errDiv.querySelector('.eco-retry-btn').addEventListener('click', function () {
+            errDiv.remove();
+            attempts = 0;
+            isLoading = true;
+            showTyping();
+            attempt();
+          });
         });
     }
     attempt();
